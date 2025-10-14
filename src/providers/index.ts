@@ -1,5 +1,5 @@
-import { KeyValidator, ProviderConfig } from './keyValidator';
-import { AuthError, ApiClientError, NetworkError, TickerError } from './errors';
+import { KeyValidator, ProviderConfig } from '../keyValidator';
+import { AuthError, ApiClientError, NetworkError, TickerError } from '../errors';
 import got from 'got';
 
 export interface TickerProvider {

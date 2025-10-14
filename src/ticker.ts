@@ -2,9 +2,9 @@
 // See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
-import { TickerProvider } from './tickerProvider';
-import { BinanceTickerProvider } from './binanceTickerProvider';
-import { OKXTickerProvider } from './okxTickerProvider';
+import { TickerProvider } from './providers';
+import { BinanceTickerProvider } from './providers/binance';
+import { OKXTickerProvider } from './providers/okx';
 
 // represents a ticker object
 export interface Ticker {
@@ -22,6 +22,7 @@ export class Tickers {
   private tickers: Ticker[];
   private tickerProviders: TickerProvider[] = [];
   private allTokens: { [key: string]: any[] } = {};
+  private lastSuccessfulTokens: { [key: string]: any[] } = {}; // Cache for fallback
   private higherColor: string;
   private lowerColor: string;
 
@@ -33,9 +34,13 @@ export class Tickers {
     this.higherColor = configuration.higherColor || 'lightgreen';
     this.lowerColor = configuration.lowerColor || 'coral';
 
-    this.tickers.forEach(ticker => {
+    // Get unique providers that are actually used
+    const usedProviders = [...new Set(this.tickers.map(ticker => ticker.provider))];
+
+    // Create only one instance per provider type
+    usedProviders.forEach(providerName => {
       let tickerProvider: TickerProvider;
-      switch (ticker.provider) {
+      switch (providerName) {
         case 'Binance':
           tickerProvider = new BinanceTickerProvider(configuration.providers?.binance?.apiKey, configuration.providers?.binance?.secretKey);
           break;
@@ -43,7 +48,7 @@ export class Tickers {
           tickerProvider = new OKXTickerProvider(configuration.providers?.okx?.apiKey, configuration.providers?.okx?.secretKey);
           break;
         default:
-          throw new Error(`Unknown ticker provider: ${ticker.provider}`);
+          throw new Error(`Unknown ticker provider: ${providerName}`);
       }
       this.tickerProviders.push(tickerProvider);
     });
@@ -54,7 +59,8 @@ export class Tickers {
     });
 
     this.getAllTokens();
-    setInterval(() => this.getAllTokens(), 60000);
+    // Increase interval to reduce rate limiting (90 seconds instead of 60)
+    setInterval(() => this.getAllTokens(), 90000);
 
     // handle the first refresh call
     this.refresh();
@@ -85,6 +91,13 @@ export class Tickers {
               continue;
             }
             const allTokensForProvider = this.allTokens[ticker.provider];
+
+            // Skip if no data available for this provider
+            if (!allTokensForProvider || allTokensForProvider.length === 0) {
+              console.warn(`No data available for ${ticker.provider}, skipping ${ticker.symbol}`);
+              continue;
+            }
+
             const tickerData = await tickerProvider.getTicker(ticker.symbol, ticker.currency, allTokensForProvider);
             const item = this.items[ticker.symbol];
 
@@ -132,19 +145,37 @@ export class Tickers {
   }
 
   async getAllTokens() {
-    try {
-      for (const tickerProvider of this.tickerProviders) {
-        if (tickerProvider instanceof BinanceTickerProvider) {
+    // Get unique providers that are actually used by configured tickers
+    const usedProviders = [...new Set(this.tickers.map(ticker => ticker.provider))];
+
+    for (const tickerProvider of this.tickerProviders) {
+      try {
+        if (tickerProvider instanceof BinanceTickerProvider && usedProviders.includes('Binance')) {
           const binanceTickers = await tickerProvider.getTickers();
           this.allTokens['Binance'] = binanceTickers;
-        } else if (tickerProvider instanceof OKXTickerProvider) {
+          this.lastSuccessfulTokens['Binance'] = binanceTickers; // Cache successful data
+          console.log('Binance: Successfully updated token data');
+        } else if (tickerProvider instanceof OKXTickerProvider && usedProviders.includes('OKX')) {
           const okxTickers = await tickerProvider.getTickers();
           this.allTokens['OKX'] = okxTickers;
+          this.lastSuccessfulTokens['OKX'] = okxTickers; // Cache successful data
+          console.log('OKX: Successfully updated token data');
         }
+      } catch (error: any) {
+        const providerName = tickerProvider instanceof BinanceTickerProvider ? 'Binance' : 'OKX';
+        console.error(`Error retrieving tokens from ${providerName}:`, error.message);
+
+        // Use cached data if available, otherwise keep current data
+        if (this.lastSuccessfulTokens[providerName]) {
+          this.allTokens[providerName] = this.lastSuccessfulTokens[providerName];
+          console.warn(`${providerName}: Using cached data due to API error`);
+        } else if (!this.allTokens[providerName]) {
+          // If no cached data and no current data, initialize empty array
+          this.allTokens[providerName] = [];
+          console.warn(`${providerName}: No cached data available, using empty array`);
+        }
+        // If we have current data but no cached data, just keep using current data
       }
-    } catch (error: any) {
-      console.error('Error retrieving all tokens:', error.message);
-      // Don't throw error to avoid stopping entire refresh
     }
   }
 }

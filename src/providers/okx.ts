@@ -1,6 +1,6 @@
-import { BaseTickerProvider } from './tickerProvider';
+import { BaseTickerProvider } from '.';
 import got from 'got';
-import { ApiClientError } from './errors';
+import { ApiClientError } from '../errors';
 
 export interface OKXTicker {
   price: number;
