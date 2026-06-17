@@ -23,7 +23,7 @@ export class Tickers {
   private tickerProviders: TickerProvider[] = [];
   private allTokens: { [key: string]: any[] } = {};
   private lastSuccessfulTokens: { [key: string]: any[] } = {}; // Cache for fallback
-  private allTokensInterval: NodeJS.Timeout | undefined;
+  private isRefreshing = false;
   private higherColor: string;
   private lowerColor: string;
 
@@ -59,21 +59,12 @@ export class Tickers {
       this.items[ticker.symbol] = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, priority);
     });
 
-    this.getAllTokens();
-    // Increase interval to reduce rate limiting (90 seconds instead of 60)
-    this.allTokensInterval = setInterval(() => this.getAllTokens(), 90000);
-
     // handle the first refresh call
     this.refresh();
   }
 
   // dispose of the ticker
   dispose() {
-    if (this.allTokensInterval !== undefined) {
-      clearInterval(this.allTokensInterval);
-      this.allTokensInterval = undefined;
-    }
-
     // hide and dispose the status bar item
     Object.values(this.items).forEach(item => {
       item.hide();
@@ -82,72 +73,79 @@ export class Tickers {
   }
 
   // refresh the ticker
-  refresh() {
-    (async () => {
-      try {
-        await this.getAllTokens();
-        for (const ticker of this.tickers) {
-          try {
-            const tickerProvider = this.tickerProviders.find(
-              provider =>
-                (provider instanceof BinanceTickerProvider && ticker.provider === 'Binance') ||
-                (provider instanceof OKXTickerProvider && ticker.provider === 'OKX')
-            );
-            if (!tickerProvider) {
-              continue;
-            }
-            const allTokensForProvider = this.allTokens[ticker.provider];
+  async refresh() {
+    if (this.isRefreshing) {
+      console.warn('Ticker refresh skipped because a previous refresh is still running');
+      return;
+    }
 
-            // Skip if no data available for this provider
-            if (!allTokensForProvider || allTokensForProvider.length === 0) {
-              console.warn(`No data available for ${ticker.provider}, skipping ${ticker.symbol}`);
-              continue;
-            }
+    this.isRefreshing = true;
 
-            const tickerData = await tickerProvider.getTicker(ticker.symbol, ticker.currency, allTokensForProvider);
-            const item = this.items[ticker.symbol];
-
-            // set the status bar item text using the template
-            item.text = ticker.template
-              .replace('{symbol}', ticker.symbol)
-              .replace('{price}', tickerData.price.toString())
-              .replace('{open}', tickerData.open.toString())
-              .replace('{high}', tickerData.high.toString())
-              .replace('{low}', tickerData.low.toString())
-              .replace('{change}', tickerData.change.toString())
-              .replace('{percent}', (tickerData.percent >= 0 ? '+' : '') + tickerData.percent + '%');
-            // set the status bar item colour based on the percent change
-            item.color = tickerData.percent < 0 ? this.lowerColor : this.higherColor;
-            // make sure the status bar item is visible
-            item.show();
-          } catch (error: any) {
-            console.error(`Error refreshing ${ticker.symbol} from ${ticker.provider}:`, error.message);
-            const item = this.items[ticker.symbol];
-
-            // Display error message on status bar
-            if (error.name === 'AuthError') {
-              item.text = `${ticker.symbol}: API Key error`;
-              item.color = 'red';
-            } else if (error.name === 'NetworkError') {
-              item.text = `${ticker.symbol}: Network error`;
-              item.color = 'orange';
-            } else {
-              item.text = `${ticker.symbol}: Error`;
-              item.color = 'red';
-            }
-            item.show();
+    try {
+      await this.getAllTokens();
+      for (const ticker of this.tickers) {
+        try {
+          const tickerProvider = this.tickerProviders.find(
+            provider =>
+              (provider instanceof BinanceTickerProvider && ticker.provider === 'Binance') ||
+              (provider instanceof OKXTickerProvider && ticker.provider === 'OKX')
+          );
+          if (!tickerProvider) {
+            continue;
           }
-        }
-      } catch (error: any) {
-        console.error('Error refreshing all tickers:', error.message);
-        // Display error message on all items
-        Object.values(this.items).forEach(item => {
-          item.text = 'Connection error';
-          item.color = 'red';
+          const allTokensForProvider = this.allTokens[ticker.provider];
+
+          // Skip if no data available for this provider
+          if (!allTokensForProvider || allTokensForProvider.length === 0) {
+            console.warn(`No data available for ${ticker.provider}, skipping ${ticker.symbol}`);
+            continue;
+          }
+
+          const tickerData = await tickerProvider.getTicker(ticker.symbol, ticker.currency, allTokensForProvider);
+          const item = this.items[ticker.symbol];
+
+          // set the status bar item text using the template
+          item.text = ticker.template
+            .replace('{symbol}', ticker.symbol)
+            .replace('{price}', tickerData.price.toString())
+            .replace('{open}', tickerData.open.toString())
+            .replace('{high}', tickerData.high.toString())
+            .replace('{low}', tickerData.low.toString())
+            .replace('{change}', tickerData.change.toString())
+            .replace('{percent}', (tickerData.percent >= 0 ? '+' : '') + tickerData.percent + '%');
+          // set the status bar item colour based on the percent change
+          item.color = tickerData.percent < 0 ? this.lowerColor : this.higherColor;
+          // make sure the status bar item is visible
           item.show();
-        });
+        } catch (error: any) {
+          console.error(`Error refreshing ${ticker.symbol} from ${ticker.provider}:`, error.message);
+          const item = this.items[ticker.symbol];
+
+          // Display error message on status bar
+          if (error.name === 'AuthError') {
+            item.text = `${ticker.symbol}: API Key error`;
+            item.color = 'red';
+          } else if (error.name === 'NetworkError') {
+            item.text = `${ticker.symbol}: Network error`;
+            item.color = 'orange';
+          } else {
+            item.text = `${ticker.symbol}: Error`;
+            item.color = 'red';
+          }
+          item.show();
+        }
       }
-    })();
+    } catch (error: any) {
+      console.error('Error refreshing all tickers:', error.message);
+      // Display error message on all items
+      Object.values(this.items).forEach(item => {
+        item.text = 'Connection error';
+        item.color = 'red';
+        item.show();
+      });
+    } finally {
+      this.isRefreshing = false;
+    }
   }
 
   async getAllTokens() {
