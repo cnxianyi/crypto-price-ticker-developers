@@ -76,6 +76,25 @@ export class Tickers {
     return `${ticker.provider}:${ticker.symbol}:${ticker.currency}:${index}`;
   }
 
+  private formatTickerText(ticker: Ticker, tickerData: any): string {
+    let text = ticker.template;
+    const replacements: { [key: string]: string } = {
+      symbol: ticker.symbol,
+      price: tickerData.price.toString(),
+      open: tickerData.open.toString(),
+      high: tickerData.high.toString(),
+      low: tickerData.low.toString(),
+      change: tickerData.change.toString(),
+      percent: (tickerData.percent >= 0 ? '+' : '') + tickerData.percent + '%'
+    };
+
+    Object.keys(replacements).forEach(key => {
+      text = text.split(`{${key}}`).join(replacements[key]);
+    });
+
+    return text;
+  }
+
   // refresh the ticker
   async refresh() {
     if (this.isRefreshing) {
@@ -109,14 +128,7 @@ export class Tickers {
           const item = this.items[this.getItemKey(ticker, index)];
 
           // set the status bar item text using the template
-          item.text = ticker.template
-            .replace('{symbol}', ticker.symbol)
-            .replace('{price}', tickerData.price.toString())
-            .replace('{open}', tickerData.open.toString())
-            .replace('{high}', tickerData.high.toString())
-            .replace('{low}', tickerData.low.toString())
-            .replace('{change}', tickerData.change.toString())
-            .replace('{percent}', (tickerData.percent >= 0 ? '+' : '') + tickerData.percent + '%');
+          item.text = this.formatTickerText(ticker, tickerData);
           // set the status bar item colour based on the percent change
           item.color = tickerData.percent < 0 ? this.lowerColor : this.higherColor;
           // make sure the status bar item is visible
