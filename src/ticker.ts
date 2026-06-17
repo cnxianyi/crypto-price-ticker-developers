@@ -54,9 +54,9 @@ export class Tickers {
       this.tickerProviders.push(tickerProvider);
     });
 
-    // create status bar items for each symbol
+    // create status bar items for each configured ticker
     this.tickers.forEach((ticker, priority) => {
-      this.items[ticker.symbol] = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, priority);
+      this.items[this.getItemKey(ticker, priority)] = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, priority);
     });
 
     // handle the first refresh call
@@ -72,6 +72,10 @@ export class Tickers {
     });
   }
 
+  private getItemKey(ticker: Ticker, index: number): string {
+    return `${ticker.provider}:${ticker.symbol}:${ticker.currency}:${index}`;
+  }
+
   // refresh the ticker
   async refresh() {
     if (this.isRefreshing) {
@@ -83,7 +87,7 @@ export class Tickers {
 
     try {
       await this.getAllTokens();
-      for (const ticker of this.tickers) {
+      for (const [index, ticker] of this.tickers.entries()) {
         try {
           const tickerProvider = this.tickerProviders.find(
             provider =>
@@ -102,7 +106,7 @@ export class Tickers {
           }
 
           const tickerData = await tickerProvider.getTicker(ticker.symbol, ticker.currency, allTokensForProvider);
-          const item = this.items[ticker.symbol];
+          const item = this.items[this.getItemKey(ticker, index)];
 
           // set the status bar item text using the template
           item.text = ticker.template
@@ -119,7 +123,7 @@ export class Tickers {
           item.show();
         } catch (error: any) {
           console.error(`Error refreshing ${ticker.symbol} from ${ticker.provider}:`, error.message);
-          const item = this.items[ticker.symbol];
+          const item = this.items[this.getItemKey(ticker, index)];
 
           // Display error message on status bar
           if (error.name === 'AuthError') {
