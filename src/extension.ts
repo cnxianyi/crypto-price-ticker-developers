@@ -1,4 +1,4 @@
-// Copyright (c) Mavis2103. Licensed under the MIT license.
+// Copyright (c) cnxianyi. Licensed under the MIT license.
 // See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
@@ -32,7 +32,7 @@ function constructor() {
   }
 
   // get the ticker definition from the configuration
-  const configuration: any = vscode.workspace.getConfiguration().get('crypto-price-ticker');
+  const configuration: any = vscode.workspace.getConfiguration().get('crypto-price-ticker-derivatives');
   const tickerDefinitions: any[] = configuration.tickers;
 
   const tickersConfig = tickerDefinitions.map(definition => ({

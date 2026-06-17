@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "crypto-price-ticker",
+      "name": "crypto-price-ticker-derivatives",
       "dependencies": {
         "got": "^11.8.3",
         "vsce": "^2.15.0"

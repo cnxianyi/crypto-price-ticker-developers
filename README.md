@@ -1,4 +1,4 @@
-# Crypto Price Ticker for VS Code
+# Crypto Price Ticker Derivatives for VS Code
 
 Monitor real-time cryptocurrency derivatives prices directly in your Visual Studio Code status bar. Stay updated with the latest Binance USD-M Futures prices for Bitcoin, Ethereum, and any other supported coins while you code.
 
@@ -15,10 +15,10 @@ Monitor real-time cryptocurrency derivatives prices directly in your Visual Stud
 
 1. Open Visual Studio Code.
 2. Go to the Extensions view (`Ctrl+Shift+X`).
-3. Search for `crypto-price-ticker` and install it.
+3. Search for `crypto-price-ticker-derivatives` and install it.
 4. Or install directly from [Visual Studio Marketplace][marketplace].
 
-[marketplace]: https://marketplace.visualstudio.com/items?itemName=Mavis2103.crypto-price-ticker
+[marketplace]: https://marketplace.visualstudio.com/items?itemName=cnxianyi.crypto-price-ticker-derivatives
 
 ## How to Use
 
@@ -28,19 +28,19 @@ Edit your VS Code `settings.json` to customize the extension:
 
 ```jsonc
 // Refresh interval in seconds
-"crypto-price-ticker.interval": 60,
+"crypto-price-ticker-derivatives.interval": 60,
 
 // Only refresh when VSCode window is focused (true/false)
-"crypto-price-ticker.onlyRefreshWhenFocused": false,
+"crypto-price-ticker-derivatives.onlyRefreshWhenFocused": false,
 
 // Color when price increases
-"crypto-price-ticker.higherColor": "lightgreen",
+"crypto-price-ticker-derivatives.higherColor": "lightgreen",
 
 // Color when price decreases
-"crypto-price-ticker.lowerColor": "coral",
+"crypto-price-ticker-derivatives.lowerColor": "coral",
 
 // Array of ticker definitions
-"crypto-price-ticker.tickers": [
+"crypto-price-ticker-derivatives.tickers": [
   {
     "symbol": "BTC",
     "currency": "USDT",
@@ -56,7 +56,7 @@ Edit your VS Code `settings.json` to customize the extension:
 ],
 
 // Binance API keys (optional, improves rate limits)
-"crypto-price-ticker.providers": {
+"crypto-price-ticker-derivatives.providers": {
   "binance": {
     "apiKey": "",
     "secretKey": ""
@@ -87,7 +87,7 @@ Customize how each ticker appears in the status bar using these tags:
 ### Example Configuration
 
 ```jsonc
-"crypto-price-ticker.tickers": [
+"crypto-price-ticker-derivatives.tickers": [
   {
     "symbol": "BTC",
     "currency": "USDT",
@@ -101,7 +101,7 @@ Customize how each ticker appears in the status bar using these tags:
     "template": "{symbol}: {price} ({percent})"
   }
 ],
-"crypto-price-ticker.providers": {
+"crypto-price-ticker-derivatives.providers": {
   "binance": {
     "apiKey": "your-binance-api-key",
     "secretKey": "your-binance-secret-key"
@@ -123,9 +123,9 @@ Customize how each ticker appears in the status bar using these tags:
 
 ## Screenshot
 
-![Crypto Price Ticker VS Code Example](https://github.com/Mavis2103/Crypto-Tricker/raw/master/images/default.png)
+![Crypto Price Ticker Derivatives VS Code Example](https://github.com/cnxianyi/crypto-price-ticker-derivatives/raw/master/images/default.png)
 
-## Why Use Crypto Price Ticker for VS Code?
+## Why Use Crypto Price Ticker Derivatives for VS Code?
 
 - Instantly see crypto prices without leaving your coding environment.
 - Highly customizable and easy to set up.
@@ -137,4 +137,4 @@ Customize how each ticker appears in the status bar using these tags:
 
 ---
 
-**Crypto Price Ticker for VS Code** - The best way to keep track of cryptocurrency prices while coding!
+**Crypto Price Ticker Derivatives for VS Code** - The best way to keep track of cryptocurrency derivatives prices while coding!

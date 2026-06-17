@@ -1,4 +1,4 @@
-// Copyright (c) Mavis2103. Licensed under the MIT license.
+// Copyright (c) cnxianyi. Licensed under the MIT license.
 // See LICENSE file in the project root for full license information.
 
 import * as vscode from 'vscode';
@@ -30,7 +30,7 @@ export class Tickers {
   constructor(tickers: Ticker[]) {
     this.tickers = tickers;
 
-    const configuration: any = vscode.workspace.getConfiguration().get('crypto-price-ticker');
+    const configuration: any = vscode.workspace.getConfiguration().get('crypto-price-ticker-derivatives');
     this.higherColor = configuration.higherColor || 'lightgreen';
     this.lowerColor = configuration.lowerColor || 'coral';
 

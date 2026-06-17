@@ -7,3 +7,4 @@ tsconfig.json
 .eslintignore
 **/*.map
 **/*.ts
+*.vsix

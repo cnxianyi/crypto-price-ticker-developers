@@ -1,4 +1,4 @@
-// Copyright (c) Mavis2103. Licensed under the MIT license.
+// Copyright (c) cnxianyi. Licensed under the MIT license.
 // See LICENSE file in the project root for full license information.
 
 export class TickerError extends Error {
