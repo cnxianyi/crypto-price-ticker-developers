@@ -49,7 +49,7 @@
           "default": "lightgreen",
           "description": "The color that indicates the symbols is trading higher."
         },
-        "lowerColor": {
+        "crypto-price-ticker.lowerColor": {
           "type": "string",
           "default": "coral",
           "description": "The color that indicates the symbols is trading lower."

@@ -63,6 +63,13 @@ function refresh(configuration: any) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
+  if (interval !== undefined) {
+    clearInterval(interval);
+    interval = undefined;
+  }
+
   // dispose of the tickers
-  tickers.dispose();
+  if (tickers !== undefined) {
+    tickers.dispose();
+  }
 }

@@ -23,6 +23,7 @@ export class Tickers {
   private tickerProviders: TickerProvider[] = [];
   private allTokens: { [key: string]: any[] } = {};
   private lastSuccessfulTokens: { [key: string]: any[] } = {}; // Cache for fallback
+  private allTokensInterval: NodeJS.Timeout | undefined;
   private higherColor: string;
   private lowerColor: string;
 
@@ -60,7 +61,7 @@ export class Tickers {
 
     this.getAllTokens();
     // Increase interval to reduce rate limiting (90 seconds instead of 60)
-    setInterval(() => this.getAllTokens(), 90000);
+    this.allTokensInterval = setInterval(() => this.getAllTokens(), 90000);
 
     // handle the first refresh call
     this.refresh();
@@ -68,6 +69,11 @@ export class Tickers {
 
   // dispose of the ticker
   dispose() {
+    if (this.allTokensInterval !== undefined) {
+      clearInterval(this.allTokensInterval);
+      this.allTokensInterval = undefined;
+    }
+
     // hide and dispose the status bar item
     Object.values(this.items).forEach(item => {
       item.hide();
